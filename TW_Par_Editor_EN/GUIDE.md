@@ -1,4 +1,4 @@
-# Guide — TW1 PAR Editor v1.1
+# Guide — TW1 PAR Editor v1.2
 
 ## Installation
 
@@ -58,6 +58,39 @@ Each field has:
 - **Right-click** a label → Rename / Remove
 - Changes are saved to `~/tw1_par_labels.json`
 - Labels apply per field-count category (all 65-field entries share the same labels)
+
+## Managing Entries (Right-Click Menu)
+
+Right-click any entry in the tree to access the context menu:
+
+### Duplicate Entry
+
+Creates a deep copy of the selected entry with a new name.
+
+- The editor auto-suggests the next name by incrementing the trailing number (e.g. `ROADSIGN_L_13` → `ROADSIGN_L_14`)
+- String fields containing the old name (e.g. mesh paths) are automatically updated to the new name
+- The duplicate is inserted directly after the original
+- A warning appears if the name already exists
+
+**Example workflow — adding a new road sign:**
+1. Open `TwoWorlds.par`
+2. Search for `ROADSIGN_L_13`
+3. Right-click → **Duplicate**
+4. Confirm name `ROADSIGN_L_14`
+5. Adjust mesh path and other fields in the detail panel
+6. Save
+
+### Rename Entry
+
+Changes the entry name. String fields referencing the old name are updated automatically.
+
+### Delete Entry
+
+Removes an entry from its list (with confirmation dialog).
+
+### Add New Entry (on List nodes)
+
+Right-click a list node to add a blank entry with the same field structure as existing entries in that list.
 
 ## Editing Values
 
