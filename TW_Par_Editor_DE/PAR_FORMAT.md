@@ -174,6 +174,80 @@ GENERIC         0x00000002
 └─ VIRTUAL    0x00000112
 ```
 
+## Mesh Field Syntax (Extended String Format)
+
+The `mesh` field (field index 1, type `string`) in object entries uses an extended syntax that encodes mesh variants, texture overrides, and multi-skin configurations in a single string value. This is not a separate binary format — it is a specially formatted string that the engine parses at runtime.
+
+### Grammar
+
+```
+mesh_field   := vdf_path [ ":" tex_list ]
+vdf_path     := path_segment ( "\\" path_segment )* "\\" filename ".vdf"
+filename     := name_part [ "[" range "]" ] name_part
+range        := digit "-" digit
+tex_list     := texture ( "|" texture )*
+texture      := name ".dds"
+```
+
+### Components
+
+**VDF Path** — A backslash-separated file path to a `.vdf` model file, relative to the `Graphics\Models\` directory.
+
+```
+Houses\VILLAGE 02\STABLE_02_04.vdf
+```
+
+**Range Notation `[n-m]`** — Defines a set of mesh variants by expanding a numeric range in the filename. The engine generates all filenames from `n` to `m` inclusive, zero-padded to match the original digit width.
+
+```
+STAIRS_02_0[1-4].vdf
+```
+
+Expands to: `STAIRS_02_01.vdf`, `STAIRS_02_02.vdf`, `STAIRS_02_03.vdf`, `STAIRS_02_04.vdf`
+
+These variants can be cycled through in the Two Worlds Editor by right-clicking on a placed object. All variants share the same PAR parameters (HP, flags, draw distance, etc.) — only the visual mesh changes.
+
+**Texture Override `:texture.dds`** — Overrides the default diffuse texture embedded in the VDF file's shader data. The texture path is relative to the `Graphics\Textures\` directory.
+
+```
+Houses\VILLAGE 02\STABLE_02_04.vdf:ALT_TEXTURE.dds
+```
+
+**Multiple Texture Variants `|`** — The pipe separator defines additional texture alternatives. Each texture corresponds to a separate visual variant of the object.
+
+```
+Houses\TOWN 02\STAIRS_02_0[1-4].vdf:STAIRS_02.dds|STAIRS_04.dds
+```
+
+### SDK Spreadsheet Representation
+
+The SDK spreadsheet (`TwoWorlds.xls`) splits this compound string across multiple columns for readability:
+
+```
+Column "mesh"    → VDF path with optional [n-m] range (everything before ":")
+Column "#mesh2"  → First texture override (between ":" and first "|")
+Column "#mesh3"  → Second texture override (after first "|")
+Column "#mesh4"  → Third texture override (after second "|")
+```
+
+These are display-only columns in the spreadsheet. In the PAR binary, everything is stored as a single concatenated string in field index 1. When editing in the PAR Editor, the entire compound string must be written into the `mesh` field.
+
+### Examples
+
+| PAR mesh field value | Mesh(es) | Textures |
+|---------------------|----------|----------|
+| `Houses\VILLAGE 02\STABLE_02_04.vdf` | 1 mesh | Default (from VDF) |
+| `Houses\TOWN 02\STAIRS_02_0[1-4].vdf` | 4 variants | Default (from VDF) |
+| `Models\SWORD.vdf:SWORD_RED.dds` | 1 mesh | 1 override |
+| `Houses\TOWN 02\STAIRS_02_0[1-4].vdf:STAIRS_02.dds\|STAIRS_04.dds` | 4 variants | 2 texture sets |
+
+### Modding Notes
+
+- When creating new objects with mesh variants, ensure all referenced VDF files exist in the game's WD archives
+- Texture overrides only replace the primary diffuse texture (TexS0 in the VDF shader) — bump maps and lightmaps remain unchanged
+- The range notation is particularly useful for modular building sets (walls, fences, stairs) where multiple visual variants share identical gameplay properties
+- When duplicating entries in the PAR Editor, the mesh path is auto-updated with the new name — but texture overrides (`:` and `|` parts) are preserved as-is and may need manual adjustment
+
 ## Reference Fields
 
 Fields prefixed with `$` in the SDK are **references** to other PAR entries. They store a uint32 hash/ID that maps to another entry's identifier. Examples:

@@ -1,4 +1,4 @@
-# Anleitung — TW1 PAR Editor v1.1
+# Anleitung — TW1 PAR Editor v1.3
 
 ## Installation
 
@@ -87,6 +87,104 @@ Jedes Feld hat:
 ```
 
 **Import:** `Datei → Import JSON` — lädt JSON zurück als PAR-Daten (zum Speichern als .par)
+
+## Einträge verwalten (Rechtsklick-Menü)
+
+Rechtsklick auf einen Eintrag im Baum öffnet ein Kontextmenü:
+
+- **Duplicate** — Erstellt eine Kopie des Eintrags. Der nächste Name wird automatisch vorgeschlagen (z.B. `ROADSIGN_L_13` → `ROADSIGN_L_14`). String-Felder die den alten Namen enthalten (z.B. Mesh-Pfad) werden automatisch aktualisiert.
+- **Rename** — Benennt den Eintrag um, aktualisiert auch String-Felder.
+- **Delete** — Löscht den Eintrag (mit Bestätigungsdialog).
+
+Rechtsklick auf einen **Listen-Knoten**:
+- **Add New Entry** — Fügt einen leeren Eintrag mit gleicher Feld-Struktur hinzu.
+- **Duplicate Last Entry** — Schnellzugriff zum Klonen des letzten Eintrags.
+
+## Compare & Merge (PAR-Dateien vergleichen und zusammenführen)
+
+Der "Compare & Merge"-Tab ermöglicht es, zwei PAR-Dateien Feld für Feld zu vergleichen und Änderungen selektiv zu übernehmen.
+
+### Dateien laden
+
+- **Source PAR** — Die PAR-Datei die du bearbeiten willst (deine Arbeitsdatei)
+- **Input PAR** — Die PAR-Datei mit Änderungen die du übernehmen willst (z.B. eine andere Mod)
+- **Original PAR** (optional) — Die unmodifizierte `TwoWorlds.par` als Referenz. Der Pfad wird in `tw1_par_compare_config.json` gespeichert und beim nächsten Start automatisch geladen
+
+### Vergleichen
+
+Klick auf **Compare** — das Tool matcht Einträge über ihren Namen (z.B. `SWORD_01` in Source wird mit `SWORD_01` in Input verglichen, egal an welcher Position sie stehen) und vergleicht dann jedes einzelne Feld.
+
+### Farbcodierung
+
+- **Gelb** — Gleicher Eintrag existiert in beiden Dateien, aber ein oder mehrere Feldwerte sind unterschiedlich (Konflikt)
+- **Grün** — Eintrag existiert nur in der Input-Datei (neuer Eintrag)
+- **Blau** — Eintrag existiert nur in der Source-Datei (nichts zu mergen)
+
+Identische Einträge werden nicht angezeigt — nur die Unterschiede.
+
+### Merge durchführen
+
+1. Checkboxen (☐/☑) anklicken bei den Einträgen die du übernehmen willst
+2. Mit **Select All** / **Deselect All** alle auf einmal setzen
+3. **Merge Selected into Source** klicken — die ausgewählten Werte werden in die Source-Daten geschrieben
+4. **Save Merged PAR** — speichert die zusammengeführte Datei als `.par`
+
+### Anwendungsbeispiel
+
+Du hast eine eigene Mod-PAR (Source) und möchtest Balancing-Änderungen aus einer anderen Mod (Input) übernehmen, ohne deine eigenen Änderungen zu verlieren:
+
+1. Source laden: deine Mod-PAR
+2. Input laden: die andere Mod-PAR
+3. Original laden: die unmodifizierte `TwoWorlds.par`
+4. Compare klicken
+5. In der Tabelle siehst du genau welche Werte sich unterscheiden, und wenn das Original geladen ist auch den Originalwert als Referenz
+6. Gewünschte Änderungen anhaken → Merge → Save
+
+## Mesh-Feld Syntax
+
+Das `mesh`-Feld (Feldindex 1) bei SimplePassives, Passives und anderen Objekten unterstützt eine erweiterte Syntax die über einfache Dateipfade hinausgeht. Die Engine nutzt diese Syntax um Mesh-Varianten, Textur-Overrides und LOD-Bereiche in einem einzigen String-Feld zu definieren.
+
+### Einfacher Pfad
+
+```
+Houses\VILLAGE 02\STABLE_02_04.vdf
+```
+
+### Mesh-Varianten mit Bereichsangabe
+
+```
+Houses\TOWN 02\STAIRS_02_0[1-4].vdf
+```
+
+Die Notation `[1-4]` definiert mehrere Mesh-Varianten in einem einzigen Eintrag. Das Beispiel expandiert zu vier Meshes: `STAIRS_02_01.vdf` bis `STAIRS_02_04.vdf`. Im Two Worlds Editor können diese Varianten per Rechtsklick auf das platzierte Objekt durchgeschaltet werden. Ideal für Objekte die gleiche Parameter aber unterschiedliches Aussehen haben (z.B. verschiedene Hausstile, Zaunabschnitte, Treppen-Varianten).
+
+### Textur-Override
+
+```
+Houses\VILLAGE 02\STABLE_02_04.vdf:ALTERNATIVE_TEXTUR.dds
+```
+
+Mit `:textur.dds` nach dem VDF-Pfad wird die Standard-Textur aus der VDF-Datei überschrieben. So kann dasselbe 3D-Modell mit verschiedenen Texturen wiederverwendet werden, ohne die Mesh-Datei zu duplizieren.
+
+### Mehrere Textur-Varianten
+
+```
+Houses\TOWN 02\STAIRS_02_0[1-4].vdf:STAIRS_02.dds|STAIRS_04.dds
+```
+
+Der `|`-Separator definiert zusätzliche Textur-Varianten. Diese entsprechen den Spalten `#mesh2`, `#mesh3` usw. im SDK-Spreadsheet (`TwoWorlds.xls`).
+
+### Zusammenfassung der Syntax
+
+```
+Basis:      pfad.vdf
+Varianten:  pfad_[1-4].vdf
+Textur:     pfad.vdf:textur.dds
+Multi-Tex:  pfad.vdf:textur1.dds|textur2.dds
+Kombiniert: pfad_[1-4].vdf:textur1.dds|textur2.dds
+```
+
+**Wichtig:** Im SDK-Spreadsheet (`TwoWorlds.xls`) werden die Textur-Teile in separate Spalten (`#mesh2`, `#mesh3`) aufgeteilt. In der PAR-Datei ist aber alles ein einziger zusammenhängender String im `mesh`-Feld (Feldindex 1). Der PAR Editor zeigt diesen String komplett an — zum Bearbeiten einfach den gesamten String inkl. `:` und `|` Trennzeichen editieren.
 
 ## Tastenkürzel
 
